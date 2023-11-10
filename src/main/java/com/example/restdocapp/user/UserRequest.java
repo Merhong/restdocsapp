@@ -44,7 +44,7 @@ public class UserRequest {
         @NotEmpty
         private String password;
 
-        @Size(min = 15, max = 100)
+        @Size(min = 10, max = 100)
         @NotEmpty
         private String email;
     }

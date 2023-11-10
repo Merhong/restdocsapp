@@ -1,24 +1,24 @@
 package com.example.restdocapp.user;
 
+import com.example.restdocapp.MyWithRestDoc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@AutoConfigureMockMvc
 // @DataJpaTest // DB 관련된 메모리만 로드됨, 컨트롤러는 로드 안됨
+@AutoConfigureRestDocs(uriScheme = "http", uriHost = "localhost", uriPort = 8080)
 @SpringBootTest // 통합테스트, 얘가 실행될때 메모리에 모두 로드됨.
-public class UserControllerTest {
+public class UserControllerTest extends MyWithRestDoc {
 
-    // @AutoConfigureMockMvc를 붙여줘야함.
-    @Autowired
-    private MockMvc mvc; // http 요청할때 쓰는 mvc
+    // // @AutoConfigureMockMvc를 붙여줘야함.
+    // @Autowired
+    // private MockMvc mockMvc; // http 요청할때 쓰는 mvc
 
     @Test
     public void join_test() throws Exception {
@@ -32,7 +32,7 @@ public class UserControllerTest {
         String requestBody = om.writeValueAsString(requestDTO);
 
         /* When */
-        ResultActions resultActions = mvc.perform(
+        ResultActions resultActions = mockMvc.perform(
                 MockMvcRequestBuilders
                         .post("/join")
                         .content(requestBody)
@@ -54,17 +54,33 @@ public class UserControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.response.username").value("cos"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.response.password").value("1234"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.response.email").value("cos@nate.com"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.error").isEmpty());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").isEmpty())
+                .andDo(MockMvcResultHandlers.print())
+                .andDo(document);
     }
 
     @Test
-    public void userInfo_test() {
-        /* Given */
+    public void user_info_test() throws Exception {
+        // given
+        int id = 1;
 
+        // when
+        ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders
+                        .get("/user/" + id));
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        System.out.println(responseBody);
 
-        /* When */
-
-
-        /* Then */
+        // then
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.id").value("1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.username").value("ssar"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.password").value("1234"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.response.email").value("ssar@nate.com"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").isEmpty())
+                .andDo(MockMvcResultHandlers.print())
+                .andDo(document);
     }
 }
